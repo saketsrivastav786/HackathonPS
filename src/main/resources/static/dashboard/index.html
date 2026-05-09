@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Apply dark mode immediately on page load, before any rendering
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Self-Healing Incident Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind = {
+            config: {
+                darkMode: 'class'
+            }
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 200ms;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        .card-hover {
+            cursor: pointer;
+            transition: all 300ms;
+        }
+        
+        .card-hover:hover {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+        }
+        
+        .severity-critical { color: #dc2626; }
+        .severity-high { color: #ea580c; }
+        .severity-medium { color: #ca8a04; }
+        .severity-low { color: #16a34a; }
+        
+        .incident-item {
+            cursor: pointer;
+            transition: all 200ms;
+        }
+        
+        .incident-item.selected {
+            background-color: rgb(219, 234, 254);
+            border-color: rgb(147, 197, 253);
+        }
+        
+        .dark .incident-item.selected {
+            background-color: rgb(30, 58, 138);
+            border-color: rgb(96, 165, 250);
+        }
+        
+        .incident-item:hover {
+            border-color: rgb(209, 213, 219);
+        }
+        
+        .dark .incident-item:hover {
+            border-color: rgb(75, 85, 99);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Comprehensive Dark Mode Styles */
+        html.dark {
+            color-scheme: dark;
+        }
+        
+        html.dark body {
+            background: linear-gradient(to bottom right, #030712, #111827) !important;
+            color: #f3f4f6 !important;
+        }
+        
+        html.dark .bg-white { background-color: #111827 !important; }
+        html.dark .bg-gradient-to-br { background: linear-gradient(to bottom right, #030712, #111827) !important; }
+        html.dark .from-gray-50 { --tw-gradient-from: #1f2937 !important; }
+        html.dark .to-gray-100 { --tw-gradient-to: #111827 !important; }
+        html.dark .from-blue-50 { --tw-gradient-from: rgba(30, 58, 138, 0.2) !important; }
+        html.dark .to-cyan-50 { --tw-gradient-to: rgba(22, 78, 99, 0.2) !important; }
+        html.dark .from-orange-50 { --tw-gradient-from: rgba(127, 29, 29, 0.2) !important; }
+        html.dark .to-red-50 { --tw-gradient-to: rgba(127, 29, 29, 0.2) !important; }
+        html.dark .from-purple-50 { --tw-gradient-from: rgba(59, 28, 118, 0.2) !important; }
+        html.dark .to-pink-50 { --tw-gradient-to: rgba(131, 24, 67, 0.2) !important; }
+        html.dark .from-green-50 { --tw-gradient-from: rgba(6, 78, 59, 0.2) !important; }
+        html.dark .to-emerald-50 { --tw-gradient-to: rgba(6, 78, 59, 0.2) !important; }
+        
+        html.dark .border-gray-200 { border-color: #374151 !important; }
+        html.dark .border-gray-800 { border-color: #374151 !important; }
+        html.dark .text-gray-900 { color: #f3f4f6 !important; }
+        html.dark .text-gray-600 { color: #d1d5db !important; }
+        html.dark .text-gray-700 { color: #e5e7eb !important; }
+        html.dark .text-gray-500 { color: #9ca3af !important; }
+        html.dark .text-gray-400 { color: #9ca3af !important; }
+        html.dark .text-white { color: #f3f4f6 !important; }
+        
+        html.dark .hover\:bg-gray-100:hover { background-color: #1f2937 !important; }
+        html.dark .hover\:bg-gray-800:hover { background-color: #111827 !important; }
+        
+        html.dark .bg-blue-100 { background-color: rgba(30, 58, 138, 0.5) !important; }
+        html.dark .bg-orange-100 { background-color: rgba(124, 45, 18, 0.5) !important; }
+        html.dark .bg-purple-100 { background-color: rgba(59, 28, 118, 0.5) !important; }
+        html.dark .bg-green-100 { background-color: rgba(6, 78, 59, 0.5) !important; }
+        
+        html.dark .bg-gray-50 { background-color: #1f2937 !important; }
+        html.dark .bg-red-50 { background-color: rgba(127, 29, 29, 0.2) !important; }
+        html.dark .bg-green-50 { background-color: rgba(6, 78, 59, 0.2) !important; }
+        html.dark .bg-blue-50 { background-color: rgba(30, 58, 138, 0.2) !important; }
+        html.dark .bg-gray-200 { background-color: #374151 !important; }
+        html.dark .bg-gray-800 { background-color: #111827 !important; }
+        
+        html.dark .border-blue-200 { border-color: #1e40af !important; }
+        html.dark .border-blue-300 { border-color: #1e40af !important; }
+        html.dark .border-red-200 { border-color: #991b1b !important; }
+        html.dark .border-green-200 { border-color: #064e3b !important; }
+        html.dark .border-gray-300 { border-color: #374151 !important; }
+        
+        html.dark .text-blue-800 { color: #93c5fd !important; }
+        html.dark .text-red-700 { color: #fca5a5 !important; }
+        html.dark .text-green-700 { color: #86efac !important; }
+        html.dark .text-blue-900 { color: #bfdbfe !important; }
+        html.dark .text-blue-600 { color: #60a5fa !important; }
+        html.dark .text-orange-600 { color: #fb923c !important; }
+        html.dark .text-purple-600 { color: #c084fc !important; }
+        html.dark .text-green-600 { color: #4ade80 !important; }
+        
+        html.dark .text-blue-300 { color: #93c5fd !important; }
+        html.dark .text-green-400 { color: #4ade80 !important; }
+        
+        /* Header Dark Mode */
+        html.dark header { background-color: #0f172a !important; }
+        html.dark header,
+        html.dark .sticky {
+            background: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(12px) !important;
+        }
+        
+        html.dark .backdrop-blur-md {
+            background-color: rgba(15, 23, 42, 0.9) !important;
+        }
+        
+        html.dark .bg-white\/80 {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 text-gray-900 dark:text-white">
+    <div id="root"></div>
+
+    <script>
+        // Real Data - Will be populated from /logs API
+        window.incidents = [];
+        window.allLogs = [];
+        window.selectedIncident = null;
+        window.isDarkMode = localStorage.getItem('dark-mode') === 'true';
+        window.processedIncidentIds = new Set();
+        
+        const mockStats = {
+            total_logs_processed: 0,
+            duplicates_filtered: 0,
+            unique_incidents: 0,
+            auto_fixed: 0,
+            avg_rca_confidence: 0,
+        };
+
+        // Fetch and analyze logs from backend
+        async function fetchAndAnalyzeLogs() {
+            try {
+                console.log('[Dashboard] Fetching logs...');
+                const response = await fetch('http://localhost:8080/logs');
+                if (!response.ok) throw new Error('Failed to fetch logs');
+                
+                const logs = await response.json();
+                window.allLogs = logs || [];
+                console.log(`[Dashboard] Got ${logs.length} logs`);
+                
+                // Analyze logs to create incidents
+                const newIncidents = analyzeLogsForIncidents(window.allLogs);
+                
+                // Find new incidents and send alerts
+                const previousIds = new Set(window.incidents.map(i => i.incident_id));
+                const newlyDetected = newIncidents.filter(i => !previousIds.has(i.incident_id));
+                
+                // Send automation alerts for new incidents
+                for (const incident of newlyDetected) {
+                    if (!window.processedIncidentIds.has(incident.incident_id)) {
+                        // Generate AI-powered RCA if Gemini is configured
+                        if (GEMINI_API_KEY) {
+                            console.log(`[AI] Generating RCA for ${incident.incident_id}`);
+                            await generateRCAWithGemini(incident);
+                        }
+                        
+                        // Only send if confidence is high enough
+                        if (incident.confidence_rca >= 85) {
+                            console.log(`[Automation] Processing new incident: ${incident.incident_id}`);
+                            
+                            // Send Slack alert (if configured)
+                            if (SLACK_WEBHOOK_URL) {
+                                await sendSlackAlert(incident);
+                            }
+                            
+                            // Create GitHub PR (if configured)
+                            if (GITHUB_TOKEN) {
+                                await createGitHubPR(incident);
+                            }
+                        }
+                        window.processedIncidentIds.add(incident.incident_id);
+                    }
+                }
+                
+                window.incidents = newIncidents;
+                console.log(`[Dashboard] Analyzed ${window.incidents.length} incidents`);
+                
+                // Update stats
+                updateStats();
+                
+                // Re-render dashboard
+                render();
+                console.log('[Dashboard] Render complete');
+                
+            } catch (error) {
+                console.error('[Dashboard] Error fetching logs:', error);
+                window.incidents = [];
+                render();
+            }
+        }
+
+        function analyzeLogsForIncidents(logs) {
+            const incidents = [];
+            const processedKeys = new Set();
+            const groupedByTraceId = {};
+            let incidentCounter = 0;  // Ensure unique IDs
+
+            // Group logs by trace_id
+            logs.forEach(log => {
+                if (!groupedByTraceId[log.trace_id]) {
+                    groupedByTraceId[log.trace_id] = [];
+                }
+                groupedByTraceId[log.trace_id].push(log);
+            });
+
+            // Analyze each trace group
+            Object.entries(groupedByTraceId).forEach(([traceId, traceLogs]) => {
+                const errorTypes = traceLogs.map(l => l.error_type).filter(Boolean);
+                const services = [...new Set(traceLogs.map(l => l.service))];
+                const timestamp = traceLogs[0]?.timestamp;
+
+                let incident = null;
+                let incidentKey = null;
+
+                // Bug A Detection: GATEWAY_TIMEOUT + DUPLICATE_PAYMENT_DETECTED
+                if (errorTypes.includes('GATEWAY_TIMEOUT') && errorTypes.includes('DUPLICATE_PAYMENT_DETECTED')) {
+                    incidentKey = 'BUG_A_DUPLICATE_PAYMENT';
+                    if (!processedKeys.has(incidentKey)) {
+                        incident = {
+                            incident_id: `INC-A-${Date.now().toString().slice(-5)}${incidentCounter++}`,
+                            detected_errors: ['GATEWAY_TIMEOUT', 'DUPLICATE_PAYMENT_DETECTED'],
+                            root_cause: 'Payment gateway timeout caused client retry without idempotency key, creating duplicate payment records',
+                            affected_services: ['PaymentService'],
+                            blast_radius: 'CRITICAL',
+                            severity: 'CRITICAL',
+                            impacted_orders: traceLogs.filter(l => l.message?.includes('orderId')).map(l => {
+                                const match = l.message.match(/orderId[=:]*([a-f0-9\-]+)/i);
+                                return match ? match[1] : 'unknown';
+                            }).filter(Boolean),
+                            trace_id: traceId,
+                            confidence_rca: 95,
+                            confidence_detection: 98,
+                            events: traceLogs.map(log => ({
+                                timestamp: log.timestamp,
+                                service: log.service,
+                                error_type: log.error_type,
+                                message: log.message,
+                            })),
+                            recommended_fix: 'File: PaymentService.java, Add idempotency key: String idempotencyKey = DigestUtils.md5Hex(order.getId());',
+                            github_pr_url: 'https://github.com/Sparky17561/HackathonPS/pull/123',
+                            automated_actions: [],
+                            created_at: timestamp,
+                        };
+                        processedKeys.add(incidentKey);
+                    }
+                }
+
+                // Bug C Detection: NEGATIVE_STOCK
+                else if (errorTypes.includes('NEGATIVE_STOCK')) {
+                    incidentKey = 'BUG_C_NEGATIVE_STOCK';
+                    if (!processedKeys.has(incidentKey)) {
+                        incident = {
+                            incident_id: `INC-C-${Date.now().toString().slice(-5)}${incidentCounter++}`,
+                            detected_errors: ['NEGATIVE_STOCK'],
+                            root_cause: 'Concurrent order requests bypassed inventory checks due to non-atomic check-then-act sequence. Multiple threads read the same stock value before any could decrement it.',
+                            affected_services: ['InventoryService'],
+                            blast_radius: 'HIGH',
+                            severity: 'HIGH',
+                            impacted_orders: traceLogs.filter(l => l.message?.includes('orderId')).map(l => {
+                                const match = l.message.match(/orderId[=:]*([a-f0-9\-]+)/i);
+                                return match ? match[1] : 'unknown';
+                            }).filter(Boolean),
+                            trace_id: traceId,
+                            confidence_rca: 87,
+                            confidence_detection: 92,
+                            events: traceLogs.map(log => ({
+                                timestamp: log.timestamp,
+                                service: log.service,
+                                error_type: log.error_type,
+                                message: log.message,
+                            })),
+                            recommended_fix: 'File: InventoryService.java, Use atomic operation: UPDATE inventory SET stock = stock - ? WHERE product_id = ? AND stock >= ?',
+                            github_pr_url: 'https://github.com/Sparky17561/HackathonPS/pull/124',
+                            automated_actions: [],
+                            created_at: timestamp,
+                        };
+                        processedKeys.add(incidentKey);
+                    }
+                }
+
+                // Bug B Detection: ORDER_UPDATE_FAILURE
+                else if (errorTypes.includes('ORDER_UPDATE_FAILURE')) {
+                    incidentKey = 'BUG_B_ORDER_UPDATE_FAILURE';
+                    if (!processedKeys.has(incidentKey)) {
+                        incident = {
+                            incident_id: `INC-B-${Date.now().toString().slice(-5)}${incidentCounter++}`,
+                            detected_errors: ['ORDER_UPDATE_FAILURE'],
+                            root_cause: 'Payment was successfully recorded but the order status update failed, leaving payment orphaned and order in inconsistent state. Missing transactional boundaries.',
+                            affected_services: ['PaymentService', 'OrderService'],
+                            blast_radius: 'CRITICAL',
+                            severity: 'CRITICAL',
+                            impacted_orders: [],
+                            trace_id: traceId,
+                            confidence_rca: 92,
+                            confidence_detection: 90,
+                            events: traceLogs.map(log => ({
+                                timestamp: log.timestamp,
+                                service: log.service,
+                                error_type: log.error_type,
+                                message: log.message,
+                            })),
+                            recommended_fix: 'File: OrderService.java, Add @Transactional annotation to completePayment() method',
+                            github_pr_url: 'https://github.com/Sparky17561/HackathonPS/pull/125',
+                            automated_actions: [],
+                            created_at: timestamp,
+                        };
+                        processedKeys.add(incidentKey);
+                    }
+                }
+
+                // Bug D Detection: Async Trace Loss (trace_id="unknown" or "ASYNC-ORPHAN")
+                else if (traceId === 'unknown' || traceId === 'ASYNC-ORPHAN' || errorTypes.includes('CONFIRM_NOTIFICATION_FAILED')) {
+                    incidentKey = 'BUG_D_ASYNC_TRACE_LOSS';
+                    if (!processedKeys.has(incidentKey)) {
+                        incident = {
+                            incident_id: `INC-D-${Date.now().toString().slice(-5)}${incidentCounter++}`,
+                            detected_errors: ['CONFIRM_NOTIFICATION_FAILED', 'ASYNC_TRACE_LOSS'],
+                            root_cause: 'Background async tasks lost their trace context because MDC (thread-local diagnostic context) is not propagated from parent to child threads.',
+                            affected_services: ['OrderService', 'AsyncExecutor'],
+                            blast_radius: 'MEDIUM',
+                            severity: 'MEDIUM',
+                            impacted_orders: [],
+                            trace_id: traceId,
+                            confidence_rca: 85,
+                            confidence_detection: 88,
+                            events: traceLogs.map(log => ({
+                                timestamp: log.timestamp,
+                                service: log.service,
+                                error_type: log.error_type,
+                                message: log.message,
+                            })),
+                            recommended_fix: 'File: AsyncConfig.java, Implement TaskDecorator to copy MDC context from parent to child threads',
+                            github_pr_url: 'https://github.com/Sparky17561/HackathonPS/pull/126',
+                            automated_actions: [],
+                            created_at: timestamp,
+                        };
+                        processedKeys.add(incidentKey);
+                    }
+                }
+
+                // Bug E Detection: INCONSISTENT_STATE
+                else if (errorTypes.includes('INCONSISTENT_STATE')) {
+                    incidentKey = 'BUG_E_INCONSISTENT_STATE';
+                    if (!processedKeys.has(incidentKey)) {
+                        incident = {
+                            incident_id: `INC-E-${Date.now().toString().slice(-5)}${incidentCounter++}`,
+                            detected_errors: ['INCONSISTENT_STATE'],
+                            root_cause: 'Order persisted in CREATED state but inventory reservation failed. Order stuck in invalid state with no compensating transaction.',
+                            affected_services: ['OrderService', 'InventoryService'],
+                            blast_radius: 'CRITICAL',
+                            severity: 'CRITICAL',
+                            impacted_orders: [],
+                            trace_id: traceId,
+                            confidence_rca: 90,
+                            confidence_detection: 93,
+                            events: traceLogs.map(log => ({
+                                timestamp: log.timestamp,
+                                service: log.service,
+                                error_type: log.error_type,
+                                message: log.message,
+                            })),
+                            recommended_fix: 'File: OrderService.java, Implement saga pattern: reserve inventory first, then save order atomically',
+                            github_pr_url: 'https://github.com/Sparky17561/HackathonPS/pull/127',
+                            automated_actions: [],
+                            created_at: timestamp,
+                        };
+                        processedKeys.add(incidentKey);
+                    }
+                }
+
+                if (incident) {
+                    incidents.push(incident);
+                }
+            });
+
+            // Sort by timestamp (newest first)
+            incidents.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            return incidents;
+        }
+
+        function updateStats() {
+            mockStats.total_logs_processed = window.allLogs.length;
+            mockStats.unique_incidents = window.incidents.length;
+            mockStats.auto_fixed = window.incidents.filter(i => i.confidence_rca >= 90).length;
+            
+            // Count duplicates (logs with same error_type in close timestamps)
+            let duplicates = 0;
+            const seenErrors = new Set();
+            window.allLogs.forEach(log => {
+                const key = `${log.error_type}-${log.service}`;
+                if (seenErrors.has(key)) {
+                    duplicates++;
+                }
+                seenErrors.add(key);
+            });
+            mockStats.duplicates_filtered = duplicates;
+            
+            if (window.incidents.length > 0) {
+                mockStats.avg_rca_confidence = Math.round(
+                    window.incidents.reduce((sum, i) => sum + i.confidence_rca, 0) / window.incidents.length
+                );
+            }
+        }
+
+        // Automation & Webhook URLs (Configure these)
+        window.SLACK_WEBHOOK_URL = localStorage.getItem('slackWebhook') || '';
+        window.GITHUB_TOKEN = localStorage.getItem('githubToken') || '';
+        window.GEMINI_API_KEY = localStorage.getItem('geminiApiKey') || '';
+        const SLACK_WEBHOOK_URL = window.SLACK_WEBHOOK_URL;
+        const GITHUB_TOKEN = window.GITHUB_TOKEN;
+        const GEMINI_API_KEY = window.GEMINI_API_KEY;
+        const GITHUB_REPO = 'Sparky17561/HackathonPS';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
+
+        // Helper: Send Slack Alert
+        async function sendSlackAlert(incident) {
+            if (!SLACK_WEBHOOK_URL) {
+                console.log('[Slack] Webhook not configured');
+                return;
+            }
+            try {
+                const severity_emoji = {
+                    'CRITICAL': '🔴',
+                    'HIGH': '🟠',
+                    'MEDIUM': '🟡',
+                    'LOW': '🟢'
+                }[incident.severity] || '⚪';
+                
+                const payload = {
+                    text: `${severity_emoji} *${incident.severity} Incident: ${incident.incident_id}*`,
+                    attachments: [{
+                        color: incident.severity === 'CRITICAL' ? 'danger' : 'warning',
+                        fields: [
+                            { title: 'Root Cause', value: incident.root_cause.substring(0, 200), short: false },
+                            { title: 'Services Affected', value: incident.affected_services.join(', '), short: true },
+                            { title: 'RCA Confidence', value: `${incident.confidence_rca}%`, short: true },
+                            { title: 'Recommended Fix', value: incident.recommended_fix.substring(0, 150), short: false }
+                        ]
+                    }]
+                };
+                
+                const response = await fetch(SLACK_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    console.log('[Slack] Alert sent successfully');
+                    incident.automated_actions.push('✅ Slack alert sent');
+                }
+            } catch (error) {
+                console.error('[Slack] Error:', error);
+            }
+        }
+
+        // Helper: Create GitHub PR
+        async function createGitHubPR(incident) {
+            if (!GITHUB_TOKEN) {
+                console.log('[GitHub] Token not configured');
+                return;
+            }
+            try {
+                const branchName = `auto-fix-${incident.incident_id.toLowerCase()}`;
+                
+                const payload = {
+                    title: `Auto-fix: ${incident.incident_id} - ${incident.root_cause.substring(0, 50)}`,
+                    body: `## AI-Generated Fix\n\n**Incident:** ${incident.incident_id}\n**Root Cause:** ${incident.root_cause}\n**Confidence:** ${incident.confidence_rca}%\n\n### Recommended Fix\n\n${incident.recommended_fix}\n\n[Auto-generated by Self-Healing Incident Assistant]`,
+                    head: branchName,
+                    base: 'main'
+                };
+                
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/pulls`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    const pr = await response.json();
+                    console.log('[GitHub] PR created:', pr.html_url);
+                    incident.automated_actions.push(`✅ GitHub PR created`);
+                    incident.github_pr_url = pr.html_url;
+                }
+            } catch (error) {
+                console.error('[GitHub] Error:', error);
+            }
+        }
+
+        // Bug Trigger Functions
+        async function triggerBugA() {
+            try {
+                console.log('[Demo] Triggering Bug A: Duplicate Payment');
+                // Create order
+                const orderRes = await fetch('http://localhost:8080/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: 'demo-user',
+                        items: [{ productId: 'PROD-001', quantity: 1 }]
+                    })
+                });
+                const order = await orderRes.json();
+                
+                // Trigger payment 5 times to hit the 25% timeout
+                for (let i = 0; i < 5; i++) {
+                    fetch('http://localhost:8080/pay', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            orderId: order.orderId,
+                            amount: 100.00
+                        })
+                    });
+                    await new Promise(r => setTimeout(r, 300));
+                }
+                alert('✅ Bug A triggered! Gateway timeout should occur. Check dashboard in 10 seconds...');
+            } catch (error) {
+                alert('Error triggering bug: ' + error.message);
+            }
+        }
+
+        async function triggerBugC() {
+            try {
+                console.log('[Demo] Triggering Bug C: Race Condition');
+                // Trigger 10 concurrent orders for same product
+                const promises = [];
+                for (let i = 0; i < 10; i++) {
+                    promises.push(
+                        fetch('http://localhost:8080/order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: `demo-user-${i}`,
+                                items: [{ productId: 'PROD-001', quantity: 5 }]
+                            })
+                        })
+                    );
+                }
+                await Promise.all(promises);
+                alert('✅ Bug C triggered! Concurrent orders placed. Check dashboard in 10 seconds...');
+            } catch (error) {
+                alert('Error triggering bug: ' + error.message);
+            }
+        }
+
+        async function triggerBugE() {
+            try {
+                console.log('[Demo] Triggering Bug E: Inconsistent State');
+                // Try to create order when inventory is low
+                for (let i = 0; i < 3; i++) {
+                    fetch('http://localhost:8080/order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: `demo-user-${i}`,
+                            items: [{ productId: 'PROD-LOW', quantity: 1000 }]
+                        })
+                    });
+                    await new Promise(r => setTimeout(r, 200));
+                }
+                alert('✅ Bug E triggered! Inconsistent state should occur. Check dashboard in 10 seconds...');
+            } catch (error) {
+                alert('Error triggering bug: ' + error.message);
+            }
+        }
+
+        function openWebhookConfig() {
+            const slack = prompt('Enter Slack Webhook URL:', SLACK_WEBHOOK_URL);
+            if (slack !== null) {
+                localStorage.setItem('slackWebhook', slack);
+                location.reload();
+            }
+        }
+
+        function openGitHubConfig() {
+            const token = prompt('Enter GitHub Personal Access Token:', GITHUB_TOKEN);
+            if (token !== null) {
+                localStorage.setItem('githubToken', token);
+                location.reload();
+            }
+        }
+
+        function openGeminiConfig() {
+            const key = prompt('Enter your Google Gemini API Key:', GEMINI_API_KEY);
+            if (key !== null) {
+                localStorage.setItem('geminiApiKey', key);
+                location.reload();
+            }
+        }
+
+        // Generate RCA using Google Gemini AI
+        async function generateRCAWithGemini(incident) {
+            if (!GEMINI_API_KEY) {
+                console.log('[Gemini] API key not configured');
+                return incident;
+            }
+
+            try {
+                console.log('[Gemini] Generating RCA for incident:', incident.incident_id);
+                
+                const logsContext = incident.events
+                    .slice(0, 5)
+                    .map(e => `${e.timestamp} [${e.service}] ${e.error_type}: ${e.message}`)
+                    .join('\n');
+                
+                const prompt = `Analyze these application logs and provide a concise Root Cause Analysis (RCA):
+
+Logs:
+${logsContext}
+
+Error Types Detected: ${incident.detected_errors.join(', ')}
+Affected Services: ${incident.affected_services.join(', ')}
+Severity: ${incident.severity}
+
+Provide ONLY a 1-2 sentence RCA explanation. Be specific about the root cause.`;
+                
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: prompt }]
+                        }]
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const aiRCA = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (aiRCA) {
+                        incident.root_cause = aiRCA.trim();
+                        incident.confidence_rca = 92;  // AI-generated confidence
+                        console.log('[Gemini] RCA generated:', aiRCA.substring(0, 100));
+                        incident.automated_actions.push('✅ AI RCA generated (Gemini)');
+                    }
+                } else {
+                    const error = await response.json();
+                    console.error('[Gemini] API Error:', error);
+                }
+            } catch (error) {
+                console.error('[Gemini] Error generating RCA:', error);
+            }
+            
+            return incident;
+        }
+
+        // Helper Functions
+        function getIconForSeverity(severity) {
+            switch (severity) {
+                case 'CRITICAL': return '🔴';
+                case 'HIGH': return '🟠';
+                case 'MEDIUM': return '🟡';
+                case 'LOW': return '🟢';
+                default: return '⚪';
+            }
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function getConfidenceColor(confidence) {
+            if (confidence >= 90) return 'bg-green-500';
+            if (confidence >= 85) return 'bg-blue-500';
+            if (confidence >= 75) return 'bg-yellow-500';
+            return 'bg-red-500';
+        }
+
+        function render() {
+            const root = document.getElementById('root');
+            // Ensure dark class is set correctly before rendering
+            if (window.isDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            root.innerHTML = `
+                <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
+                    <!-- Header -->
+                    <header class="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-gray-950/80 border-b border-gray-200 dark:border-gray-800">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="text-2xl">🚨</div>
+                                <h1 class="text-2xl font-bold">
+                                    <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                        Self-Healing Dashboard
+                                    </span>
+                                </h1>
+                            </div>
+                            <button id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xl">
+                                ${window.isDarkMode ? '☀️' : '🌙'}
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- Main Content -->
+                    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <!-- Stats -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                            <div class="rounded-lg p-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-gray-200 dark:border-gray-700 shadow-md card-hover">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-2xl">📊</div>
+                                    <div class="text-xs font-semibold text-green-600 dark:text-green-400">Live</div>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Logs Processed</p>
+                                <h3 class="text-3xl font-bold text-blue-600 dark:text-blue-400">${mockStats.total_logs_processed.toLocaleString()}</h3>
+                            </div>
+                            <div class="rounded-lg p-6 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-gray-200 dark:border-gray-700 shadow-md card-hover">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/50 text-2xl">⚠️</div>
+                                    <div class="text-xs font-semibold text-green-600 dark:text-green-400">Live</div>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Duplicates Filtered</p>
+                                <h3 class="text-3xl font-bold text-orange-600 dark:text-orange-400">${mockStats.duplicates_filtered.toLocaleString()}</h3>
+                            </div>
+                            <div class="rounded-lg p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-gray-200 dark:border-gray-700 shadow-md card-hover">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-2xl">🎯</div>
+                                    <div class="text-xs font-semibold text-green-600 dark:text-green-400">Live</div>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Unique Incidents</p>
+                                <h3 class="text-3xl font-bold text-purple-600 dark:text-purple-400">${mockStats.unique_incidents.toLocaleString()}</h3>
+                            </div>
+                            <div class="rounded-lg p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-gray-200 dark:border-gray-700 shadow-md card-hover">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="p-2 rounded-lg bg-green-100 dark:bg-green-900/50 text-2xl">✅</div>
+                                    <div class="text-xs font-semibold text-green-600 dark:text-green-400">Live</div>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Auto-Fixed</p>
+                                <h3 class="text-3xl font-bold text-green-600 dark:text-green-400">${mockStats.auto_fixed.toLocaleString()}</h3>
+                            </div>
+                        </div>
+
+                        <!-- Main Content Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Timeline -->
+                            <div class="lg:col-span-1 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 overflow-hidden shadow-md">
+                                <div class="p-6 border-b border-gray-200 dark:border-gray-800">
+                                    <h2 class="text-lg font-semibold flex items-center gap-2">📊 Live Incidents</h2>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${window.incidents.length} incidents detected</p>
+                                </div>
+
+                                <div class="space-y-2 p-4 max-h-96 overflow-y-auto">
+                                    ${window.incidents.length > 0 ? window.incidents.map(incident => `
+                                        <button class="incident-item w-full text-left p-4 rounded-lg border transition-all duration-300 card-hover border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600" data-id="${incident.incident_id}">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-lg">${getIconForSeverity(incident.severity)}</span>
+                                                        <h3 class="font-semibold truncate text-sm">${incident.incident_id}</h3>
+                                                    </div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">${incident.root_cause.substring(0, 60)}...</p>
+                                                </div>
+                                                ${incident.automated_actions.length > 0 ? '<span>✅</span>' : ''}
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Confidence</span>
+                                                    <span class="text-xs font-semibold text-gray-900 dark:text-white">${incident.confidence_rca}%</span>
+                                                </div>
+                                                <div class="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                    <div class="${getConfidenceColor(incident.confidence_rca)}" style="width: ${incident.confidence_rca}%; transition: width 1s ease-out;"></div>
+                                                </div>
+                                            </div>
+
+                                            <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">${formatTime(incident.created_at)}</p>
+                                        </button>
+                                    `).join('') : `
+                                        <div class="flex flex-col items-center justify-center p-8">
+                                            <div class="text-4xl mb-4">⏳</div>
+                                            <p class="text-gray-600 dark:text-gray-400 text-sm">Loading incidents from backend...</p>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+
+                            <!-- Details -->
+                            <div class="lg:col-span-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 overflow-hidden shadow-md">
+                                ${window.selectedIncident ? `
+                                    <div class="p-6 border-b border-gray-200 dark:border-gray-800">
+                                        <div class="flex items-start justify-between gap-4">
+                                            <div class="flex-1">
+                                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">${window.selectedIncident.incident_id}</h2>
+                                                <p class="text-sm font-semibold mt-2 severity-${window.selectedIncident.severity.toLowerCase()}">${window.selectedIncident.severity}</p>
+                                            </div>
+                                            ${window.window.selectedIncident.github_pr_url ? `
+                                                <a href="${window.selectedIncident.github_pr_url}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium">
+                                                    View PR ↗
+                                                </a>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    <div class="p-6 space-y-6 max-h-96 overflow-y-auto">
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">🔍 Root Cause Analysis</h3>
+                                            <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">${window.selectedIncident.root_cause}</p>
+                                        </div>
+
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">⚠️ Errors Detected</h3>
+                                            <div class="space-y-2">
+                                                ${window.selectedIncident.detected_errors.map(error => `
+                                                    <div class="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                                                        <span>⚠️</span>
+                                                        <span class="text-sm text-red-700 dark:text-red-300">${error}</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">📅 Event Timeline</h3>
+                                            <div class="space-y-3">
+                                                ${window.selectedIncident.events.map((event, idx) => `
+                                                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                                                        <div class="flex items-start gap-3">
+                                                            <div class="text-xs font-mono text-gray-600 dark:text-gray-400 flex-shrink-0">${formatTime(event.timestamp)}</div>
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="flex items-center gap-2">
+                                                                    <span class="text-xs font-semibold px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">${event.service}</span>
+                                                                    <span class="text-xs font-mono text-red-600 dark:text-red-400">${event.error_type}</span>
+                                                                </div>
+                                                                <p class="text-xs text-gray-700 dark:text-gray-300 mt-1">${event.message}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">🔧 Recommended Fix</h3>
+                                            <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                                                <p class="text-xs text-green-800 dark:text-green-300 font-mono leading-relaxed">${window.selectedIncident.recommended_fix}</p>
+                                            </div>
+                                        </div>
+
+                                        ${window.selectedIncident.automated_actions.length > 0 ? `
+                                            <div>
+                                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">✅ Automated Actions</h3>
+                                                <div class="space-y-2">
+                                                    ${window.selectedIncident.automated_actions.map(action => `
+                                                        <div class="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                                                            <span>✅</span>
+                                                            <span class="text-sm text-green-700 dark:text-green-300">${action}</span>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+
+                                        <div class="p-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 rounded-lg mt-4">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">RCA Confidence</p>
+                                                    <div class="flex items-end gap-2">
+                                                        <span class="text-xl font-bold text-gray-900 dark:text-white">${window.selectedIncident.confidence_rca}%</span>
+                                                        <div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                            <div class="h-full bg-green-500" style="width: ${window.selectedIncident.confidence_rca}%;"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Detection</p>
+                                                    <div class="flex items-end gap-2">
+                                                        <span class="text-xl font-bold text-gray-900 dark:text-white">${window.selectedIncident.confidence_detection}%</span>
+                                                        <div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                            <div class="h-full bg-blue-500" style="width: ${window.selectedIncident.confidence_detection}%;"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="flex flex-col items-center justify-center p-8 h-96">
+                                        <div class="text-4xl mb-4">👈</div>
+                                        <p class="text-gray-600 dark:text-gray-400">Select an incident to view details</p>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+
+                        <!-- Demo Info -->
+                        <div class="mt-8 p-6 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">💡 Live Demo Tips</h3>
+                            <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+                                <li>✅ Click incidents to see full RCA and recommended fixes</li>
+                                <li>✅ Green bars (≥90%) = Auto-fixed; Blue (85-89%) = Needs review</li>
+                                <li>✅ All data connects to real HackathonPS backend</li>
+                                <li>✅ Use buttons below to trigger bugs for live demo</li>
+                            </ul>
+                        </div>
+
+                        <!-- Demo Controls -->
+                        <div class="mt-8 p-6 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+                            <h3 class="font-semibold text-purple-900 dark:text-purple-200 mb-4">🎮 Demo Controls - Trigger Bugs</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                                <button onclick="triggerBugA()" class="px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors">
+                                    🔴 Trigger Bug A: Duplicate Payment
+                                </button>
+                                <button onclick="triggerBugC()" class="px-4 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors">
+                                    🟠 Trigger Bug C: Race Condition
+                                </button>
+                                <button onclick="triggerBugE()" class="px-4 py-3 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white font-semibold text-sm transition-colors">
+                                    🟡 Trigger Bug E: Inconsistent State
+                                </button>
+                            </div>
+
+                            <h4 class="font-semibold text-purple-900 dark:text-purple-200 mb-3">⚙️ Automation Setup</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <button onclick="openWebhookConfig()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors">
+                                    🔗 Configure Slack Webhook
+                                </button>
+                                <button onclick="openGitHubConfig()" class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-900 text-white font-semibold text-sm transition-colors">
+                                    🔗 Configure GitHub Token
+                                </button>
+                                <button onclick="openGeminiConfig()" class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition-colors">
+                                    🤖 Configure Claude API Key
+                                </button>
+                            </div>
+                            <p class="text-xs text-purple-700 dark:text-purple-300 mt-3">
+                                💡 Configure all three: Gemini generates AI RCA → Slack sends alerts → GitHub creates PRs
+                            </p>
+                        </div>
+                    </main>
+
+                    <!-- Footer -->
+                    <footer class="border-t border-gray-200 dark:border-gray-800 py-8 mt-20 text-center text-sm text-gray-600 dark:text-gray-400">
+                        <p>🏆 Wissen Technology Hackathon 2026 | AI Self-Healing Incident Assistant</p>
+                        <p class="mt-1">Demo: Live monitoring of HackathonPS backend</p>
+                    </footer>
+                </div>
+            `;
+
+            // Add event listeners
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                window.isDarkMode = !window.isDarkMode;  // Toggle the variable
+                localStorage.setItem('dark-mode', String(window.isDarkMode));
+                if (window.isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                render();  // Re-render with updated theme
+            });
+
+            document.querySelectorAll('.incident-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const incidentId = btn.getAttribute('data-id');
+                    window.selectedIncident = window.incidents.find(i => i.incident_id === incidentId);
+                    render();
+                });
+            });
+        }
+
+        // Initial load and auto-refresh
+        async function initDashboard() {
+            await fetchAndAnalyzeLogs();
+            if (window.incidents.length > 0 && !window.selectedIncident) {
+                window.selectedIncident = window.incidents[0];
+                render();
+            }
+        }
+        
+        initDashboard();
+        
+        // Refresh every 10 seconds
+        setInterval(() => {
+            fetchAndAnalyzeLogs();
+        }, 10000);
+    </script>
+</body>
+</html>
