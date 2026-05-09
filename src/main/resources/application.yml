@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: hacksys-backend
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 management:
   endpoints:
@@ -24,3 +29,8 @@ app:
     timeout-ms: 3000
   chaos:
     intermittent-failure-rate: 0.25
+  alerting:
+    slack-webhook-url: ""
+    trace-incident-threshold: 3
+    service-error-threshold: 2
+    incident-window-ms: 60000
